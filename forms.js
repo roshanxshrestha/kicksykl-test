@@ -7,9 +7,14 @@ const Forms = (() => {
   // ── Validation rules ───────────────────────────────────────
   const validators = {
     required: (v) => v.trim().length > 0 || "This field is required.",
-    phone: (v) => /^[\d\s\+\-]{8,15}$/.test(v.trim()) || "Enter a valid phone number.",
-    email: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) || "Enter a valid email.",
-    minLength: (n) => (v) => v.trim().length >= n || `Minimum ${n} characters required.`,
+    phone: (v) =>
+      /^[\d\s\+\-]{8,15}$/.test(v.trim()) || "Enter a valid phone number.",
+    email: (v) =>
+      !v ||
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ||
+      "Enter a valid email.",
+    minLength: (n) => (v) =>
+      v.trim().length >= n || `Minimum ${n} characters required.`,
   };
 
   function validate(value, rules) {
@@ -49,13 +54,22 @@ const Forms = (() => {
   function getCaptchaToken(form) {
     const widget = form.querySelector(".g-recaptcha");
     if (!widget) return null; // no captcha configured on this form
-    const token = form.querySelector('[name="g-recaptcha-response"]')?.value || "";
-    return { configured: true, token, hasSiteKey: widget.dataset.sitekey && widget.dataset.sitekey !== "YOUR_RECAPTCHA_SITE_KEY" };
+    const token =
+      form.querySelector('[name="g-recaptcha-response"]')?.value || "";
+    return {
+      configured: true,
+      token,
+      hasSiteKey:
+        widget.dataset.sitekey &&
+        widget.dataset.sitekey !== "6LdWOSYtAAAAAN_tUkxDWU12nWVOzsp3pj8hxH6q",
+    };
   }
 
   function resetCaptcha() {
     if (typeof grecaptcha !== "undefined") {
-      try { grecaptcha.reset(); } catch {}
+      try {
+        grecaptcha.reset();
+      } catch {}
     }
   }
 
@@ -65,16 +79,27 @@ const Forms = (() => {
     if (!form) return;
 
     const fields = {
-      name:    { el: form.querySelector('[name="customerName"]'),    rules: [validators.required, validators.minLength(2)] },
-      phone:   { el: form.querySelector('[name="customerPhone"]'),   rules: [validators.required, validators.phone] },
-      address: { el: form.querySelector('[name="customerAddress"]'), rules: [validators.required, validators.minLength(10)] },
+      name: {
+        el: form.querySelector('[name="customerName"]'),
+        rules: [validators.required, validators.minLength(2)],
+      },
+      phone: {
+        el: form.querySelector('[name="customerPhone"]'),
+        rules: [validators.required, validators.phone],
+      },
+      address: {
+        el: form.querySelector('[name="customerAddress"]'),
+        rules: [validators.required, validators.minLength(10)],
+      },
     };
 
     // Live validation
     Object.values(fields).forEach(({ el }) => {
       if (!el) return;
       el.addEventListener("blur", () => validateField(el, fields));
-      el.addEventListener("input", () => clearFieldError(el.closest(".form-field")));
+      el.addEventListener("input", () =>
+        clearFieldError(el.closest(".form-field")),
+      );
     });
 
     form.addEventListener("submit", async (e) => {
@@ -94,7 +119,10 @@ const Forms = (() => {
       // (see the data-sitekey attribute on the .g-recaptcha div in the HTML)
       const captcha = getCaptchaToken(form);
       if (captcha?.configured && captcha.hasSiteKey && !captcha.token) {
-        window.KicksyUtils?.Toast?.show("Please complete the captcha verification.", "error");
+        window.KicksyUtils?.Toast?.show(
+          "Please complete the captcha verification.",
+          "error",
+        );
         return;
       }
 
@@ -102,21 +130,29 @@ const Forms = (() => {
       showSpinner(submitBtn, true);
 
       // Gather product data from hidden fields
-      const productId    = form.querySelector('[name="productId"]')?.value    || "";
-      const productName  = form.querySelector('[name="productName"]')?.value  || "";
-      const brand        = form.querySelector('[name="brand"]')?.value        || "";
-      const selectedSize = form.querySelector('[name="selectedSize"]')?.value || "";
-      const selectedColor= form.querySelector('[name="selectedColor"]')?.value|| "";
-      const price        = form.querySelector('[name="price"]')?.value        || "";
-      const note         = form.querySelector('[name="note"]')?.value         || "";
+      const productId = form.querySelector('[name="productId"]')?.value || "";
+      const productName =
+        form.querySelector('[name="productName"]')?.value || "";
+      const brand = form.querySelector('[name="brand"]')?.value || "";
+      const selectedSize =
+        form.querySelector('[name="selectedSize"]')?.value || "";
+      const selectedColor =
+        form.querySelector('[name="selectedColor"]')?.value || "";
+      const price = form.querySelector('[name="price"]')?.value || "";
+      const note = form.querySelector('[name="note"]')?.value || "";
 
       const orderData = {
-        productId, productName, brand, selectedSize, selectedColor, price,
-        customerName:    fields.name.el.value.trim(),
-        customerPhone:   fields.phone.el.value.trim(),
+        productId,
+        productName,
+        brand,
+        selectedSize,
+        selectedColor,
+        price,
+        customerName: fields.name.el.value.trim(),
+        customerPhone: fields.phone.el.value.trim(),
         customerAddress: fields.address.el.value.trim(),
-        customerNote:    note.trim(),
-        whatsappOpened:  false,
+        customerNote: note.trim(),
+        whatsappOpened: false,
         status: "New",
         ...(captcha?.token ? { "g-recaptcha-response": captcha.token } : {}),
       };
@@ -136,29 +172,45 @@ const Forms = (() => {
         if (waBtn && productId) {
           const product = await API.fetchProduct(productId).catch(() => null);
           if (product) {
-            waBtn.href = CONFIG.getWhatsAppURL(product, selectedSize, selectedColor, {
-              name:    orderData.customerName,
-              phone:   orderData.customerPhone,
-              address: orderData.customerAddress,
-              note:    orderData.customerNote,
-            });
+            waBtn.href = CONFIG.getWhatsAppURL(
+              product,
+              selectedSize,
+              selectedColor,
+              {
+                name: orderData.customerName,
+                phone: orderData.customerPhone,
+                address: orderData.customerAddress,
+                note: orderData.customerNote,
+              },
+            );
             waBtn.style.display = "inline-flex";
           }
         }
-        window.KicksyUtils?.Toast?.show("Order submitted! We'll contact you soon.", "success");
+        window.KicksyUtils?.Toast?.show(
+          "Order submitted! We'll contact you soon.",
+          "success",
+        );
       } else {
-        window.KicksyUtils?.Toast?.show(result.message || "Submission failed. Please try WhatsApp.", "error");
+        window.KicksyUtils?.Toast?.show(
+          result.message || "Submission failed. Please try WhatsApp.",
+          "error",
+        );
       }
     });
 
     function validateField(el, fields) {
-      const key   = Object.entries(fields).find(([, v]) => v.el === el)?.[0];
+      const key = Object.entries(fields).find(([, v]) => v.el === el)?.[0];
       if (!key) return null;
       const { rules } = fields[key];
       const error = validate(el.value, rules);
       const wrapper = el.closest(".form-field");
-      if (error) { setFieldError(wrapper, error); return error; }
-      else { clearFieldError(wrapper); return null; }
+      if (error) {
+        setFieldError(wrapper, error);
+        return error;
+      } else {
+        clearFieldError(wrapper);
+        return null;
+      }
     }
   }
 
@@ -168,15 +220,29 @@ const Forms = (() => {
     if (!form) return;
 
     const fields = {
-      name:    { el: form.querySelector('[name="name"]'),    rules: [validators.required, validators.minLength(2)] },
-      phone:   { el: form.querySelector('[name="phone"]'),   rules: [validators.phone] },
-      email:   { el: form.querySelector('[name="email"]'),   rules: [validators.email] },
-      message: { el: form.querySelector('[name="message"]'), rules: [validators.required, validators.minLength(10)] },
+      name: {
+        el: form.querySelector('[name="name"]'),
+        rules: [validators.required, validators.minLength(2)],
+      },
+      phone: {
+        el: form.querySelector('[name="phone"]'),
+        rules: [validators.phone],
+      },
+      email: {
+        el: form.querySelector('[name="email"]'),
+        rules: [validators.email],
+      },
+      message: {
+        el: form.querySelector('[name="message"]'),
+        rules: [validators.required, validators.minLength(10)],
+      },
     };
 
     Object.values(fields).forEach(({ el }) => {
       if (!el) return;
-      el.addEventListener("input", () => clearFieldError(el.closest(".form-field")));
+      el.addEventListener("input", () =>
+        clearFieldError(el.closest(".form-field")),
+      );
     });
 
     form.addEventListener("submit", async (e) => {
@@ -189,14 +255,19 @@ const Forms = (() => {
       Object.values(fields).forEach(({ el, rules }) => {
         const error = validate(el.value, rules);
         const wrapper = el.closest(".form-field");
-        if (error) { setFieldError(wrapper, error); valid = false; }
-        else clearFieldError(wrapper);
+        if (error) {
+          setFieldError(wrapper, error);
+          valid = false;
+        } else clearFieldError(wrapper);
       });
       if (!valid) return;
 
       const captcha = getCaptchaToken(form);
       if (captcha?.configured && captcha.hasSiteKey && !captcha.token) {
-        window.KicksyUtils?.Toast?.show("Please complete the captcha verification.", "error");
+        window.KicksyUtils?.Toast?.show(
+          "Please complete the captcha verification.",
+          "error",
+        );
         return;
       }
 
@@ -204,11 +275,11 @@ const Forms = (() => {
       showSpinner(submitBtn, true);
 
       const messageData = {
-        name:    fields.name.el.value.trim(),
-        phone:   fields.phone.el?.value.trim() || "",
-        email:   fields.email.el?.value.trim() || "",
+        name: fields.name.el.value.trim(),
+        phone: fields.phone.el?.value.trim() || "",
+        email: fields.email.el?.value.trim() || "",
         message: fields.message.el.value.trim(),
-        source:  "contact_form",
+        source: "contact_form",
         ...(captcha?.token ? { "g-recaptcha-response": captcha.token } : {}),
       };
 
@@ -220,9 +291,15 @@ const Forms = (() => {
         form.reset();
         const success = document.getElementById("contactSuccess");
         if (success) success.classList.add("show");
-        window.KicksyUtils?.Toast?.show("Message sent! We'll reply soon.", "success");
+        window.KicksyUtils?.Toast?.show(
+          "Message sent! We'll reply soon.",
+          "success",
+        );
       } else {
-        window.KicksyUtils?.Toast?.show("Failed to send. Please reach us on WhatsApp.", "error");
+        window.KicksyUtils?.Toast?.show(
+          "Failed to send. Please reach us on WhatsApp.",
+          "error",
+        );
       }
     });
   }
@@ -232,12 +309,15 @@ const Forms = (() => {
     const form = document.getElementById("orderForm");
     if (!form || !product) return;
 
-    const set = (name, val) => { const el = form.querySelector(`[name="${name}"]`); if (el) el.value = val; };
-    set("productId",     product.id);
-    set("productName",   product.name);
-    set("brand",         product.brand);
-    set("price",         product.salePrice || product.price);
-    set("selectedSize",  size);
+    const set = (name, val) => {
+      const el = form.querySelector(`[name="${name}"]`);
+      if (el) el.value = val;
+    };
+    set("productId", product.id);
+    set("productName", product.name);
+    set("brand", product.brand);
+    set("price", product.salePrice || product.price);
+    set("selectedSize", size);
     set("selectedColor", color);
   }
 
