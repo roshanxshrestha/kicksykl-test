@@ -4,9 +4,9 @@
 // ============================================================
 
 const ProductPage = (() => {
-  let product    = null;
+  let product = null;
   let selectedColor = "";
-  let selectedSize  = "";
+  let selectedSize = "";
 
   // ── Dynamic favicon (shoes vs leather context) ──────────────
   // product.html is a single shared template for both product types,
@@ -16,19 +16,21 @@ const ProductPage = (() => {
   function setFavicon(isLeather) {
     const icons = isLeather
       ? {
-          svg: "/assets/images/favicon-leather.svg",
-          png32: "/assets/images/favicon-leather-32x32.png",
-          png16: "/assets/images/favicon-leather-16x16.png",
+          svg: "./assets/favicon-leather/favicon.svg",
+          png32: "./assets/favicon-leather/favicon-96x96.png",
+          png16: "./assets/favicon-leather/favicon-96x96.png",
         }
       : {
-          svg: "/assets/images/favicon.svg",
-          png32: "/assets/images/favicon-32x32.png",
-          png16: "/assets/images/favicon-16x16.png",
+          svg: "./assets/favicon/favicon.svg",
+          png32: "./assets/favicon/favicon-96x96.png",
+          png16: "./assets/favicon/favicon-96x96.png",
         };
 
     const setLink = (rel, sizes, href) => {
       let link = document.querySelector(
-        sizes ? `link[rel="${rel}"][sizes="${sizes}"]` : `link[rel="${rel}"][type="image/svg+xml"]`
+        sizes
+          ? `link[rel="${rel}"][sizes="${sizes}"]`
+          : `link[rel="${rel}"][type="image/svg+xml"]`,
       );
       if (!link) {
         link = document.createElement("link");
@@ -49,7 +51,10 @@ const ProductPage = (() => {
   async function init() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
-    if (!id) { window.location.href = "/shop"; return; }
+    if (!id) {
+      window.location.href = "/shop";
+      return;
+    }
 
     showSkeleton();
 
@@ -86,7 +91,7 @@ const ProductPage = (() => {
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:16px">
-          ${[80,60,45,100,70,80].map(w => `<div class="skeleton skeleton-text" style="width:${w}%"></div>`).join("")}
+          ${[80, 60, 45, 100, 70, 80].map((w) => `<div class="skeleton skeleton-text" style="width:${w}%"></div>`).join("")}
         </div>
       </div>`;
   }
@@ -97,10 +102,16 @@ const ProductPage = (() => {
     if (!main || !product) return;
 
     selectedColor = product.colors?.[0] || "";
-    selectedSize  = "";
+    selectedSize = "";
 
     const discount = discountPercent(product.price, product.salePrice);
-    const images   = [product.image1, product.image2, product.image3, product.image4, product.image5].filter(Boolean);
+    const images = [
+      product.image1,
+      product.image2,
+      product.image3,
+      product.image4,
+      product.image5,
+    ].filter(Boolean);
     const isLeather = product.productType === "leather";
 
     // Switch favicon to match the brand context of the product being
@@ -123,17 +134,24 @@ const ProductPage = (() => {
 
     const backLink = document.getElementById("backToShopLink");
     if (backLink) {
-      backLink.textContent = isLeather ? "← Back to Leather Goods" : "← Back to Shop";
+      backLink.textContent = isLeather
+        ? "← Back to Leather Goods"
+        : "← Back to Shop";
       backLink.setAttribute("href", isLeather ? "/leather" : "/shop");
     }
 
     // ── Badges (Best Seller / Daily Pick / New / Customizable / Sale) ──
     const badges = [];
-    if (product.bestSeller)   badges.push(`<span class="badge badge-bestseller">Best Seller</span>`);
-    if (product.dailyPick)    badges.push(`<span class="badge badge-daily">Daily Pick</span>`);
-    if (product.newArrival)   badges.push(`<span class="badge badge-new">New</span>`);
-    if (product.customizable) badges.push(`<span class="badge badge-customizable">Customizable</span>`);
-    if (discount >= 10)       badges.push(`<span class="badge badge-sale">${discount}% OFF</span>`);
+    if (product.bestSeller)
+      badges.push(`<span class="badge badge-bestseller">Best Seller</span>`);
+    if (product.dailyPick)
+      badges.push(`<span class="badge badge-daily">Daily Pick</span>`);
+    if (product.newArrival)
+      badges.push(`<span class="badge badge-new">New</span>`);
+    if (product.customizable)
+      badges.push(`<span class="badge badge-customizable">Customizable</span>`);
+    if (discount >= 10)
+      badges.push(`<span class="badge badge-sale">${discount}% OFF</span>`);
 
     // ── Quality / sourcing note (adapts by product type) ──────────
     const qualityInfoHTML = isLeather
@@ -153,17 +171,22 @@ const ProductPage = (() => {
 
     // ── Size selector helper text (adapts by product type) ─────────
     const sizeHelperHTML = isLeather
-      ? (product.customizable
-          ? `<p style="margin-top:8px;font-size:.75rem;color:var(--secondary)">Strikethrough = unavailable for selected color. Need a different size? <a href="https://wa.me/9779763374989" target="_blank" rel="noopener" style="color:var(--leather-accent);font-weight:600">Ask about custom sizing on WhatsApp</a>.</p>`
-          : `<p style="margin-top:8px;font-size:.75rem;color:var(--secondary)">Strikethrough = unavailable for selected color.</p>`)
+      ? product.customizable
+        ? `<p style="margin-top:8px;font-size:.75rem;color:var(--secondary)">Strikethrough = unavailable for selected color. Need a different size? <a href="https://wa.me/9779763374989" target="_blank" rel="noopener" style="color:var(--leather-accent);font-weight:600">Ask about custom sizing on WhatsApp</a>.</p>`
+        : `<p style="margin-top:8px;font-size:.75rem;color:var(--secondary)">Strikethrough = unavailable for selected color.</p>`
       : `<p style="margin-top:8px;font-size:.75rem;color:var(--secondary)">Sizes shown in EU. Strikethrough = unavailable for selected color.</p>`;
 
     // ── "About this item" heading (adapts by product type) ──────────
     const aboutHeading = isLeather ? "About this piece" : "About this shoe";
 
     // ── Stock check (same logic as product cards) ───────────────────
-    const hasStockMap = product.stockMap && Object.keys(product.stockMap).length > 0;
-    const inStockOverall = !product.available ? false : (hasStockMap ? (API.computeStock(product) > 0) : true);
+    const hasStockMap =
+      product.stockMap && Object.keys(product.stockMap).length > 0;
+    const inStockOverall = !product.available
+      ? false
+      : hasStockMap
+        ? API.computeStock(product) > 0
+        : true;
     const needsPreOrder = !inStockOverall;
 
     main.innerHTML = `
@@ -172,21 +195,31 @@ const ProductPage = (() => {
       <div class="product-gallery">
         <div class="gallery-main" id="galleryMain" onclick="ProductPage.openLightbox()" role="button" aria-label="View full image" tabindex="0">
           ${badges.length ? `<div class="product-detail-badges">${badges.join("")}</div>` : ""}
-          ${images[0]
-            ? `<img class="gallery-main-img" id="mainImg" src="${esc(images[0])}" alt="${esc(product.name)}" loading="eager" decoding="async">`
-            : `<div class="img-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">${window.KicksyUtils.shoeIcon()}</div>`}
+          ${
+            images[0]
+              ? `<img class="gallery-main-img" id="mainImg" src="${esc(images[0])}" alt="${esc(product.name)}" loading="eager" decoding="async">`
+              : `<div class="img-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">${window.KicksyUtils.shoeIcon()}</div>`
+          }
         </div>
-        ${images.length > 1 ? `
+        ${
+          images.length > 1
+            ? `
         <div class="gallery-thumbs" role="list" aria-label="Product images">
-          ${images.map((img, i) => `
+          ${images
+            .map(
+              (img, i) => `
             <button class="gallery-thumb ${i === 0 ? "active" : ""}"
               onclick="ProductPage.switchImage('${esc(img)}', this)"
               role="listitem"
               aria-label="View image ${i + 1}"
               aria-pressed="${i === 0}">
               <img src="${esc(img)}" alt="${esc(product.name)} view ${i + 1}" loading="lazy" decoding="async">
-            </button>`).join("")}
-        </div>` : ""}
+            </button>`,
+            )
+            .join("")}
+        </div>`
+            : ""
+        }
       </div>
 
       <!-- Info panel -->
@@ -207,28 +240,44 @@ const ProductPage = (() => {
         ${product.shortDescription ? `<p class="product-description">${esc(product.shortDescription)}</p>` : ""}
 
         <!-- Color selector -->
-        ${product.colors?.length ? `
+        ${
+          product.colors?.length
+            ? `
         <div>
           <p class="selector-label">Color <span id="selectedColorLabel">${esc(selectedColor)}</span></p>
           <div class="color-options" role="radiogroup" aria-label="Select color" id="colorOptions">
-            ${product.colors.map(c => `
+            ${product.colors
+              .map(
+                (c) => `
               <button class="color-btn ${c === selectedColor ? "active" : ""}"
                 onclick="ProductPage.selectColor('${esc(c)}')"
                 aria-pressed="${c === selectedColor}"
-                data-color="${esc(c)}">${esc(c)}</button>`).join("")}
+                data-color="${esc(c)}">${esc(c)}</button>`,
+              )
+              .join("")}
           </div>
-        </div>` : ""}
+        </div>`
+            : ""
+        }
 
         <!-- Size selector -->
-        ${product.sizes?.length ? `
+        ${
+          product.sizes?.length
+            ? `
         <div>
           <p class="selector-label">Size <span id="selectedSizeLabel">— Select —</span></p>
           <div class="size-options" role="radiogroup" aria-label="Select size" id="sizeOptions">
-            ${product.sizes.map(s => `
-              <button class="size-btn" onclick="ProductPage.selectSize('${esc(s)}')" aria-pressed="false" data-size="${esc(s)}">${esc(s)}</button>`).join("")}
+            ${product.sizes
+              .map(
+                (s) => `
+              <button class="size-btn" onclick="ProductPage.selectSize('${esc(s)}')" aria-pressed="false" data-size="${esc(s)}">${esc(s)}</button>`,
+              )
+              .join("")}
           </div>
           ${sizeHelperHTML}
-        </div>` : ""}
+        </div>`
+            : ""
+        }
 
         <!-- Stock status -->
         <div class="stock-status" id="stockStatus">
@@ -247,11 +296,15 @@ const ProductPage = (() => {
         ${qualityInfoHTML}
 
         <!-- Description -->
-        ${product.description ? `
+        ${
+          product.description
+            ? `
         <div>
           <h3 style="font-weight:600;font-size:.95rem;margin-bottom:8px">${aboutHeading}</h3>
           <p class="product-description">${esc(product.description)}</p>
-        </div>` : ""}
+        </div>`
+            : ""
+        }
 
         <!-- Order actions (desktop) -->
         <div class="product-actions" id="productActions">
@@ -263,11 +316,19 @@ const ProductPage = (() => {
           </button>
         </div>
 
-        ${needsPreOrder ? `
-        <p style="font-size:.75rem;color:var(--secondary)">📦 This item is currently out of stock — place a pre-order and we'll notify you as soon as it's back, typically within a few days.</p>` : ""}
+        ${
+          needsPreOrder
+            ? `
+        <p style="font-size:.75rem;color:var(--secondary)">📦 This item is currently out of stock — place a pre-order and we'll notify you as soon as it's back, typically within a few days.</p>`
+            : ""
+        }
 
-        ${product.colors?.length || product.sizes?.length ? `
-        <p style="font-size:.75rem;color:var(--secondary)">💡 Tip: Select your ${[product.colors?.length && "color", product.sizes?.length && "size"].filter(Boolean).join(" and ")} first for the best WhatsApp message.</p>` : ""}
+        ${
+          product.colors?.length || product.sizes?.length
+            ? `
+        <p style="font-size:.75rem;color:var(--secondary)">💡 Tip: Select your ${[product.colors?.length && "color", product.sizes?.length && "size"].filter(Boolean).join(" and ")} first for the best WhatsApp message.</p>`
+            : ""
+        }
       </div>
     </div>`;
 
@@ -277,7 +338,8 @@ const ProductPage = (() => {
     // BUGFIX: sync hidden order-form fields (productId, name, brand, price,
     // size, color) — previously never called, so order submissions had
     // no product context.
-    if (typeof Forms !== 'undefined') Forms.syncProductFields(product, selectedSize, selectedColor);
+    if (typeof Forms !== "undefined")
+      Forms.syncProductFields(product, selectedSize, selectedColor);
 
     // Sticky CTA bar (mobile)
     const stickyBar = document.getElementById("stickyCta");
@@ -300,7 +362,7 @@ const ProductPage = (() => {
         main.style.transform = "";
       }, 180);
     }
-    document.querySelectorAll(".gallery-thumb").forEach(t => {
+    document.querySelectorAll(".gallery-thumb").forEach((t) => {
       t.classList.remove("active");
       t.setAttribute("aria-pressed", "false");
     });
@@ -331,11 +393,13 @@ const ProductPage = (() => {
         <img class="img-lightbox-img" id="imgLightboxImg" src="" alt="Product image">`;
       document.body.appendChild(overlay);
 
-      overlay.addEventListener("click", e => {
+      overlay.addEventListener("click", (e) => {
         if (e.target === overlay) closeLightbox();
       });
-      document.getElementById("imgLightboxClose").addEventListener("click", closeLightbox);
-      document.addEventListener("keydown", e => {
+      document
+        .getElementById("imgLightboxClose")
+        .addEventListener("click", closeLightbox);
+      document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeLightbox();
       });
     }
@@ -356,7 +420,7 @@ const ProductPage = (() => {
   function selectColor(color) {
     selectedColor = color;
     document.getElementById("selectedColorLabel").textContent = color;
-    document.querySelectorAll(".color-btn").forEach(btn => {
+    document.querySelectorAll(".color-btn").forEach((btn) => {
       const active = btn.dataset.color === color;
       btn.classList.toggle("active", active);
       btn.setAttribute("aria-pressed", active);
@@ -367,14 +431,14 @@ const ProductPage = (() => {
     // color, clear the size selection so the user can't order an
     // out-of-stock combination.
     if (selectedSize) {
-      const stockMap   = product?.stockMap || {};
+      const stockMap = product?.stockMap || {};
       const colorStock = stockMap[selectedColor] || {};
-      const qty        = colorStock[selectedSize];
+      const qty = colorStock[selectedSize];
       if (qty !== undefined && Number(qty) === 0) {
         selectedSize = "";
         const label = document.getElementById("selectedSizeLabel");
         if (label) label.textContent = "— Select —";
-        document.querySelectorAll(".size-btn").forEach(btn => {
+        document.querySelectorAll(".size-btn").forEach((btn) => {
           btn.classList.remove("active");
           btn.setAttribute("aria-pressed", "false");
         });
@@ -382,20 +446,22 @@ const ProductPage = (() => {
     }
 
     updateStockStatus();
-    if (typeof Forms !== 'undefined') Forms.syncProductFields(product, selectedSize, selectedColor);
+    if (typeof Forms !== "undefined")
+      Forms.syncProductFields(product, selectedSize, selectedColor);
   }
 
   // ── Size selection ─────────────────────────────────────────
   function selectSize(size) {
     selectedSize = size;
     document.getElementById("selectedSizeLabel").textContent = size;
-    document.querySelectorAll(".size-btn").forEach(btn => {
+    document.querySelectorAll(".size-btn").forEach((btn) => {
       const active = btn.dataset.size === size;
       btn.classList.toggle("active", active);
       btn.setAttribute("aria-pressed", active);
     });
     updateStockStatus();
-    if (typeof Forms !== 'undefined') Forms.syncProductFields(product, selectedSize, selectedColor);
+    if (typeof Forms !== "undefined")
+      Forms.syncProductFields(product, selectedSize, selectedColor);
   }
 
   // ── Update size availability for current color ─────────────
@@ -403,7 +469,7 @@ const ProductPage = (() => {
     const stockMap = product?.stockMap || {};
     const colorStock = stockMap[selectedColor] || {};
 
-    document.querySelectorAll(".size-btn").forEach(btn => {
+    document.querySelectorAll(".size-btn").forEach((btn) => {
       const s = btn.dataset.size;
       const qty = colorStock[s];
       const unavailable = qty !== undefined && Number(qty) === 0;
@@ -418,11 +484,15 @@ const ProductPage = (() => {
     const el = document.getElementById("stockStatus");
     if (!el) return;
 
-    if (!product.available) { el.innerHTML = stockStatusHTML("out"); return; }
+    if (!product.available) {
+      el.innerHTML = stockStatusHTML("out");
+      return;
+    }
 
     if (!selectedColor && !selectedSize) {
       const total = API.computeStock(product);
-      const hasStockMap = product.stockMap && Object.keys(product.stockMap).length > 0;
+      const hasStockMap =
+        product.stockMap && Object.keys(product.stockMap).length > 0;
 
       if (!hasStockMap) {
         // No per-color/size stock tracked (e.g. leather goods) — trust `available` flag only
@@ -430,13 +500,16 @@ const ProductPage = (() => {
         return;
       }
 
-      el.innerHTML = stockStatusHTML(total > 5 ? "in" : total > 0 ? "low" : "out", total);
+      el.innerHTML = stockStatusHTML(
+        total > 5 ? "in" : total > 0 ? "low" : "out",
+        total,
+      );
       return;
     }
 
-    const stockMap    = product.stockMap || {};
-    const colorStock  = stockMap[selectedColor] || {};
-    const qty         = selectedSize ? (Number(colorStock[selectedSize]) || 0) : null;
+    const stockMap = product.stockMap || {};
+    const colorStock = stockMap[selectedColor] || {};
+    const qty = selectedSize ? Number(colorStock[selectedSize]) || 0 : null;
 
     if (qty === null) {
       el.innerHTML = stockStatusHTML("in");
@@ -450,7 +523,12 @@ const ProductPage = (() => {
   }
 
   function stockStatusHTML(type, qty) {
-    const labels = { in: "In Stock", low: `Only ${qty} left`, out: "Pre-Order — currently unavailable", unknown: "Check availability" };
+    const labels = {
+      in: "In Stock",
+      low: `Only ${qty} left`,
+      out: "Pre-Order — currently unavailable",
+      unknown: "Check availability",
+    };
     const dotClass = type === "in" ? "in" : type === "low" ? "low" : "out";
     return `<span class="stock-dot ${dotClass}"></span><span style="font-size:.875rem;font-weight:500">${labels[type]}</span>`;
   }
@@ -458,9 +536,9 @@ const ProductPage = (() => {
   // ── WhatsApp order ─────────────────────────────────────────
   function openWhatsApp(customer = {}) {
     if (!product) return;
-    const size  = selectedSize  || "Not selected";
+    const size = selectedSize || "Not selected";
     const color = selectedColor || "Not selected";
-    const url   = CONFIG.getWhatsAppURL(product, size, color, customer);
+    const url = CONFIG.getWhatsAppURL(product, size, color, customer);
 
     // Also log whatsapp open
     API.createOrder({
@@ -485,17 +563,32 @@ const ProductPage = (() => {
 
     try {
       const isLeather = product.productType === "leather";
-      const all = isLeather ? await API.fetchLeatherProducts() : await API.fetchProducts();
-      const related = all.filter(p => p.id !== product.id && (p.brand === product.brand || p.category === product.category)).slice(0, 4);
-      if (related.length === 0) { document.getElementById("relatedSection")?.remove(); return; }
+      const all = isLeather
+        ? await API.fetchLeatherProducts()
+        : await API.fetchProducts();
+      const related = all
+        .filter(
+          (p) =>
+            p.id !== product.id &&
+            (p.brand === product.brand || p.category === product.category),
+        )
+        .slice(0, 4);
+      if (related.length === 0) {
+        document.getElementById("relatedSection")?.remove();
+        return;
+      }
 
       // Update "Related Products" heading for leather goods context
       if (isLeather) {
-        const heading = document.querySelector("#relatedSection .section-title");
+        const heading = document.querySelector(
+          "#relatedSection .section-title",
+        );
         if (heading) heading.textContent = "You May Also Like";
       }
 
-      grid.innerHTML = related.map(window.KicksyUtils.buildProductCard).join("");
+      grid.innerHTML = related
+        .map(window.KicksyUtils.buildProductCard)
+        .join("");
       grid.querySelectorAll(".product-card").forEach((card, i) => {
         card.style.animationDelay = `${i * 60}ms`;
         card.classList.add("fade-in");
@@ -515,9 +608,21 @@ const ProductPage = (() => {
     } else {
       // Fallback if seo.js failed to load
       document.title = `${product.name} — ${product.brand} | Kicksy Nepal`;
-      document.querySelector('meta[name="description"]')?.setAttribute("content", product.shortDescription || product.description || CONFIG.SEO.defaultDescription);
-      document.querySelector('meta[property="og:title"]')?.setAttribute("content", document.title);
-      if (product.image1) document.querySelector('meta[property="og:image"]')?.setAttribute("content", product.image1);
+      document
+        .querySelector('meta[name="description"]')
+        ?.setAttribute(
+          "content",
+          product.shortDescription ||
+            product.description ||
+            CONFIG.SEO.defaultDescription,
+        );
+      document
+        .querySelector('meta[property="og:title"]')
+        ?.setAttribute("content", document.title);
+      if (product.image1)
+        document
+          .querySelector('meta[property="og:image"]')
+          ?.setAttribute("content", product.image1);
     }
 
     // JSON-LD Product schema (specific to this page, not in seo.js)
@@ -535,25 +640,33 @@ const ProductPage = (() => {
       sku: product.sku || product.id,
       brand: { "@type": "Brand", name: product.brand },
       description: product.description || product.shortDescription,
-      image: [product.image1, product.image2, product.image3, product.image4, product.image5].filter(Boolean),
+      image: [
+        product.image1,
+        product.image2,
+        product.image3,
+        product.image4,
+        product.image5,
+      ].filter(Boolean),
       offers: {
         "@type": "Offer",
         url: `${CONFIG.SITE_URL}/product?id=${product.id}`,
         price: product.salePrice || product.price,
         priceCurrency: "NPR",
         priceValidUntil: priceValidUntil.toISOString().split("T")[0],
-        availability: product.available ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        availability: product.available
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
         itemCondition: "https://schema.org/NewCondition",
         seller: {
           "@type": "Organization",
           name: "Kicksy Nepal",
-          url: "https://kicksy.com.np"
+          url: "https://kicksy.com.np",
         },
         shippingDetails: {
           "@type": "OfferShippingDetails",
           shippingDestination: {
             "@type": "DefinedRegion",
-            addressCountry: "NP"
+            addressCountry: "NP",
           },
           deliveryTime: {
             "@type": "ShippingDeliveryTime",
@@ -561,16 +674,16 @@ const ProductPage = (() => {
               "@type": "QuantitativeValue",
               minValue: 1,
               maxValue: 2,
-              unitCode: "DAY"
+              unitCode: "DAY",
             },
             transitTime: {
               "@type": "QuantitativeValue",
               minValue: 1,
               maxValue: 7,
-              unitCode: "DAY"
-            }
-          }
-        }
+              unitCode: "DAY",
+            },
+          },
+        },
       },
     };
     if (product.reviewCount > 0) {
@@ -579,7 +692,7 @@ const ProductPage = (() => {
         ratingValue: product.rating,
         reviewCount: product.reviewCount,
         bestRating: 5,
-        worstRating: 1
+        worstRating: 1,
       };
     }
 
@@ -595,12 +708,28 @@ const ProductPage = (() => {
   }
 
   // ── Helpers ────────────────────────────────────────────────
-  function esc(str)  { return window.KicksyUtils.sanitize(String(str || "")); }
-  function formatPrice(n) { return window.KicksyUtils.formatPrice(n); }
-  function starsHTML(r)   { return window.KicksyUtils.starsHTML(r); }
-  function discountPercent(p, s) { return window.KicksyUtils.discountPercent(p, s); }
+  function esc(str) {
+    return window.KicksyUtils.sanitize(String(str || ""));
+  }
+  function formatPrice(n) {
+    return window.KicksyUtils.formatPrice(n);
+  }
+  function starsHTML(r) {
+    return window.KicksyUtils.starsHTML(r);
+  }
+  function discountPercent(p, s) {
+    return window.KicksyUtils.discountPercent(p, s);
+  }
 
-  return { init, switchImage, openLightbox, closeLightbox, selectColor, selectSize, openWhatsApp };
+  return {
+    init,
+    switchImage,
+    openLightbox,
+    closeLightbox,
+    selectColor,
+    selectSize,
+    openWhatsApp,
+  };
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
